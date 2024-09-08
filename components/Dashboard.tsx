@@ -6,12 +6,9 @@ import { useAuth } from '@/context/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
 const inter = Inter({ subsets: ['latin'] })
+import Loading from './Loading';
+import Login from './Login';
 
-type Statuses = {
-    num_days: number;
-    time_remaining: string;
-    date: string;
-};
 
 type Moods = {
     '&*@#S': string;
@@ -55,6 +52,11 @@ const Dashboard: React.FC = () => {
 
     }
 
+    const statuses: { time_remaining: string; num_days: number; average_mood: number } = {
+        ...countValues(),
+        time_remaining: `${23 - now.getHours()}H ${60 - now.getMinutes()}M`,
+    }
+
     async function handleSetMood(mood: number) {
         const day = now.getDate()
         const month = now.getMonth()
@@ -91,12 +93,6 @@ const Dashboard: React.FC = () => {
 
     }
 
-    const statuses: Statuses = {
-        num_days: 14,
-        time_remaining: '12:00:00',
-        date: (new Date()).toDateString(),
-    }
-
     const moods: Moods = {
         '&*@#S': '😭',
         'Sad': '😢',
@@ -118,21 +114,25 @@ const Dashboard: React.FC = () => {
         setData(userDataObj)
       }, [currentUser, userDataObj])
     
-    //   if (loading) {
-    //     return <Loading />
-    //   }
+      if (loading) {
+        return <Loading />
+      }
     
-    //   if (!currentUser) {
-    //     return <Login />
-    //   }
+      if (!currentUser) {
+        return <Login />
+      }
+    
+
 
     return (
         <div className='flex flex-col flex-1 gap-8 sm:gap-12 md:gap-16'>
             <div className='grid grid-cols-3 bg-red-300 textGradient p-4 gap-4 rounded-lg'>
                 {Object.keys(statuses).map((status, statusIndex) => (
                     <div key={statusIndex} className='p-4 flex flex-col gap-1 sm:gap-2'>
-                        <p className='font-medium uppercase text-xs sm:text-sm truncate'>{status.replaceAll('_', ' ')}</p>
-                        <p className={inter.className + ' font-bold text-base sm:text-lg truncate'}>{statuses[status as keyof Statuses]}</p> 
+                        <p className='font-medium capitalize text-xs sm:text-sm truncate'>{status.replaceAll('_', ' ')}</p>
+                        <p className={inter.className + ' font-bold text-base sm:text-lg truncate'}>
+                            {statuses[status as keyof typeof statuses]}{status === 'num_days' ? ' 🔥' : ''}
+                        </p> 
                     </div>
                 ))}
             </div>
@@ -140,14 +140,17 @@ const Dashboard: React.FC = () => {
             <div className='grid grid-cols-2 sm:grid-cols-5 gap-4'>
                 {Object.keys(moods).map((mood, moodIndex) => {
                     return (
-                        <button key={moodIndex} className={'p-4 font-bold rounded-2xl blueShadow duration-200 bg-[#5b2bed] hover:bg-[#902df9] text-center flex flex-col items-center justify-center gap-2 ' + (moodIndex === 9 ? 'cols-span-2 sm:cols-span-3 md:cols-span-4' : '')}>
+                        <button onClick={() => {
+                            const currentMoodValue = moodIndex + 1
+                            handleSetMood(currentMoodValue)
+                          }} key={moodIndex} className={'p-4 font-bold rounded-2xl blueShadow duration-200 bg-[#5b2bed] hover:bg-[#902df9] text-center flex flex-col items-center justify-center gap-2 ' + (moodIndex === 9 ? 'cols-span-2 sm:cols-span-3 md:cols-span-4' : '')}>
                             <p className='text-4xl sm:text-5xl md:text-6xl'>{moods[mood as keyof Moods]}</p> 
                             <p className='text-sky-50 text-xs sm:text-sm md:text-base'>{mood}</p>
                         </button>
                     )
                 })}
             </div>
-            <Calendar data={data} handleSetMood={handleSetMood} />
+            <Calendar completeData={data} handleSetMood={handleSetMood} />
         </div>
     )
 }

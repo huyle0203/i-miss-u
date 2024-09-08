@@ -29,12 +29,13 @@ interface CalendarProps {
 }
 
 const Calendar: React.FC<CalendarProps> = ({ demo = false, completeData = {}, handleSetMood }) => {
+    const now = new Date()
     const currMonth = now.getMonth()
     const [selectedMonth, setSelectMonth] = useState<string>(Object.keys(months)[currMonth])
     const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear())
 
     const numericMonth: number = monthsArr.indexOf(selectedMonth)
-    const data: { [key: number]: number } = completeData[selectedYear]?.[numericMonth] || {}
+    const data: { [key: number]: number } = completeData?.[selectedYear]?.[numericMonth] || {}
 
     function handleIncrementMonth(val: number): void {
         if (numericMonth + val < 0) {
@@ -69,7 +70,7 @@ const Calendar: React.FC<CalendarProps> = ({ demo = false, completeData = {}, ha
             }} className='ml-auto text-indigo-400 text-lg sm:text-xl duration-200 hover:opacity-60'><i className="fa-solid fa-circle-chevron-right"></i></button>
         </div>
             <div className='flex flex-col overflow-hidden gap-1 py-4 sm:py-6 md:py-10'>
-                {[...Array(numRows).keys()].map((row, rowIndex) => {
+                {Array.from(Array(numRows).keys()).map((row, rowIndex) => {
                     return (
                     <div key={rowIndex} className='grid grid-cols-7 gap-1'>
                         {dayList.map((dayOfWeek, dayOfWeekIndex) => {

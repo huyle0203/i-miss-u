@@ -4,6 +4,8 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import Link from "next/link";
 import { AuthProvider } from "@/context/AuthContext";
+import Head from "./head";
+import Logout from "@/components/Logout";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -34,11 +36,7 @@ export default function RootLayout({
       <Link href={'/'}>
         <h1 className={'text-base sm:text-lg textGradient font-extrabold' + inter.className}>I Miss U</h1>
       </Link>
-      <div className='flex items-center justify-between '>
-        PLACEHOLDER
-      </div>
-      
-
+      <Logout />
     </header>
   );
 
@@ -50,6 +48,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      <Head />
       <AuthProvider>
       <body
         className={'w-full max-w-[1000px] mx-auto text-sm sm:text-base min-h-screen flex flex-col text-slate-800'  + `${geistSans.variable} ${geistMono.variable} antialiased`}>

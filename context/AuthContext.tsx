@@ -1,42 +1,56 @@
 'use client'
-
 import { auth, db } from '@/firebase'
-import { User, UserCredential, createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth'
+import { 
+  createUserWithEmailAndPassword, 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  User 
+} from 'firebase/auth'
 import { doc, getDoc, DocumentData } from 'firebase/firestore'
 import React, { useContext, useState, useEffect, ReactNode } from 'react'
 
+// Define the shape of your auth context value
 interface AuthContextType {
-  currentUser: User | null;
-  userDataObj: DocumentData | null;
-  setUserDataObj: React.Dispatch<React.SetStateAction<DocumentData | null>>;
-  signup: (email: string, password: string) => Promise<UserCredential>;
-  logout: () => Promise<void>;
-  login: (email: string, password: string) => Promise<UserCredential>;
-  loading: boolean;
+  currentUser: User | null
+  userDataObj: DocumentData | null
+  setUserDataObj: React.Dispatch<React.SetStateAction<DocumentData | null>>
+  signup: (email: string, password: string) => Promise<any>
+  login: (email: string, password: string) => Promise<any>
+  logout: () => Promise<void>
+  loading: boolean
 }
 
-const AuthContext = React.createContext<AuthContextType | null>(null)
+// Create context with the defined shape
+const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
 
 export function useAuth() {
-  //const context = useContext(AuthContext)
-  return useContext(AuthContext)
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+interface AuthProviderProps {
+  children: ReactNode
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [userDataObj, setUserDataObj] = useState<DocumentData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState<boolean>(true)
 
   // AUTH HANDLERS
-  function signup(email: string, password: string) {
+  function signup(email: string, password: string): Promise<any> {
     return createUserWithEmailAndPassword(auth, email, password)
   }
 
-  function login(email: string, password: string) {
+  function login(email: string, password: string): Promise<any> {
     return signInWithEmailAndPassword(auth, email, password)
   }
 
-  function logout() {
+  function logout(): Promise<void> {
     setUserDataObj(null)
     setCurrentUser(null)
     return signOut(auth)
@@ -45,24 +59,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
-        // Set the user to our local context state
         setLoading(true)
         setCurrentUser(user)
+
         if (!user) {
           console.log('No User Found')
           return
         }
-        // if user exists, fetch data from firestore database
+
+        // Fetch data from Firestore if user exists
         console.log('Fetching User Data')
         const docRef = doc(db, 'users', user.uid)
         const docSnap = await getDoc(docRef)
-        let firebaseData: DocumentData = {}
+
         if (docSnap.exists()) {
           console.log('Found User Data')
-          firebaseData = docSnap.data()
-          console.log(firebaseData)
+          setUserDataObj(docSnap.data())
+        } else {
+          setUserDataObj(null)
         }
-        setUserDataObj(firebaseData)
       } catch (err) {
         console.log((err as Error).message)
       } finally {
@@ -80,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signup,
     logout,
     login,
-    loading
+    loading,
   }
 
   return (
